@@ -148,23 +148,11 @@ app_license = "mit"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"sacc_app.tasks.all"
-# 	],
-# 	"daily": [
-# 		"sacc_app.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"sacc_app.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"sacc_app.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"sacc_app.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"daily": [
+		"sacc_app.tasks.send_loan_reminders"
+	],
+}
 
 # Testing
 # -------

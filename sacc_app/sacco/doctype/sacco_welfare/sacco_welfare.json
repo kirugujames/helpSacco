@@ -1,0 +1,84 @@
+{
+    "actions": [],
+    "autoname": "WELF-.#####",
+    "creation": "2024-01-26 10:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "member",
+        "contribution_amount",
+        "posting_date",
+        "purpose",
+        "type",
+        "amended_from"
+    ],
+    "fields": [
+        {
+            "fieldname": "member",
+            "fieldtype": "Link",
+            "label": "Member",
+            "options": "SACCO Member",
+            "reqd": 1
+        },
+        {
+            "fieldname": "contribution_amount",
+            "fieldtype": "Currency",
+            "label": "Amount",
+            "reqd": 1
+        },
+        {
+            "default": "Today",
+            "fieldname": "posting_date",
+            "fieldtype": "Date",
+            "label": "Posting Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "purpose",
+            "fieldtype": "Select",
+            "label": "Purpose",
+            "options": "Monthly Contribution\nEmergency\nDemise"
+        },
+        {
+            "default": "Contribution",
+            "fieldname": "type",
+            "fieldtype": "Select",
+            "label": "Type",
+            "options": "Contribution\nWithdrawal"
+        },
+        {
+            "fieldname": "amended_from",
+            "fieldtype": "Link",
+            "label": "Amended From",
+            "no_copy": 1,
+            "options": "SACCO Welfare",
+            "read_only": 1
+        }
+    ],
+    "is_submittable": 1,
+    "links": [],
+    "modified": "2024-01-26 10:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Sacco",
+    "name": "SACCO Welfare",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "submit": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

@@ -1,0 +1,78 @@
+{
+    "actions": [],
+    "autoname": "DEF-.#####",
+    "creation": "2024-01-26 10:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "member",
+        "loan",
+        "overdue_amount",
+        "days_overdue",
+        "status",
+        "penalty_amount"
+    ],
+    "fields": [
+        {
+            "fieldname": "member",
+            "fieldtype": "Link",
+            "label": "Member",
+            "options": "SACCO Member",
+            "read_only": 1
+        },
+        {
+            "fieldname": "loan",
+            "fieldtype": "Link",
+            "label": "Loan",
+            "options": "SACCO Loan",
+            "reqd": 1
+        },
+        {
+            "fieldname": "overdue_amount",
+            "fieldtype": "Currency",
+            "label": "Overdue Amount",
+            "reqd": 1
+        },
+        {
+            "fieldname": "days_overdue",
+            "fieldtype": "Int",
+            "label": "Days Overdue",
+            "read_only": 1
+        },
+        {
+            "default": "New Default",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "New Default\nLetter Sent\nGuarantor Notified\nRecovered"
+        },
+        {
+            "fieldname": "penalty_amount",
+            "fieldtype": "Currency",
+            "label": "Penalty Amount"
+        }
+    ],
+    "links": [],
+    "modified": "2024-01-26 10:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Sacco",
+    "name": "SACCO Defaulter",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": []
+}

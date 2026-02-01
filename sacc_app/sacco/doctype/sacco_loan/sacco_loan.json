@@ -1,0 +1,198 @@
+{
+    "actions": [],
+    "autoname": "LN-.#####",
+    "creation": "2024-01-26 10:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "member",
+        "loan_type",
+        "loan_amount",
+        "interest_rate",
+        "interest_period",
+        "interest_method",
+        "repayment_period",
+        "column_break_1",
+        "status",
+        "total_interest",
+        "total_repayable",
+        "monthly_installment",
+        "outstanding_balance",
+        "principal_paid",
+        "interest_paid",
+        "loan_details_section",
+        "repayment_schedule",
+        "guarantors_section",
+        "guarantors",
+        "total_principal_demanded",
+        "total_interest_demanded",
+        "amended_from"
+    ],
+    "fields": [
+        {
+            "fieldname": "member",
+            "fieldtype": "Link",
+            "label": "Member",
+            "options": "SACCO Member",
+            "reqd": 1
+        },
+        {
+            "fieldname": "loan_product",
+            "fieldtype": "Link",
+            "label": "Loan Product",
+            "options": "SACCO Loan Product",
+            "reqd": 1
+        },
+        {
+            "fieldname": "loan_amount",
+            "fieldtype": "Currency",
+            "label": "Loan Amount",
+            "reqd": 1
+        },
+        {
+            "default": "10",
+            "fieldname": "interest_rate",
+            "fieldtype": "Percent",
+            "label": "Interest Rate (%)",
+            "read_only": 1
+        },
+        {
+            "fieldname": "interest_method",
+            "fieldtype": "Select",
+            "label": "Interest Method",
+            "options": "Flat Rate\nReducing Balance",
+            "read_only": 1
+        },
+        {
+            "fieldname": "repayment_period",
+            "fieldtype": "Int",
+            "label": "Repayment Period (Months)",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "Draft",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Draft\nPending Approval\nApproved\nDisbursed\nActive\nCompleted\nDefaulted",
+            "allow_on_submit": 1
+        },
+        {
+            "fieldname": "total_interest",
+            "fieldtype": "Currency",
+            "label": "Total Interest",
+            "read_only": 1
+        },
+        {
+            "fieldname": "total_repayable",
+            "fieldtype": "Currency",
+            "label": "Total Repayable",
+            "read_only": 1
+        },
+        {
+            "fieldname": "monthly_installment",
+            "fieldtype": "Currency",
+            "label": "Monthly Installment",
+            "read_only": 1
+        },
+        {
+            "fieldname": "outstanding_balance",
+            "fieldtype": "Currency",
+            "label": "Outstanding Balance",
+            "read_only": 1,
+            "allow_on_submit": 1
+        },
+        {
+            "default": "0",
+            "fieldname": "principal_paid",
+            "fieldtype": "Currency",
+            "label": "Principal Paid",
+            "read_only": 1,
+            "allow_on_submit": 1
+        },
+        {
+            "default": "0",
+            "fieldname": "interest_paid",
+            "fieldtype": "Currency",
+            "label": "Interest Paid",
+            "read_only": 1,
+            "allow_on_submit": 1
+        },
+        {
+            "fieldname": "loan_details_section",
+            "fieldtype": "Section Break",
+            "label": "Repayment Schedule"
+        },
+        {
+            "fieldname": "repayment_schedule",
+            "fieldtype": "Code",
+            "label": "Schedule",
+            "options": "JSON"
+        },
+        {
+            "fieldname": "guarantors_section",
+            "fieldtype": "Section Break",
+            "label": "Guarantors"
+        },
+        {
+            "fieldname": "guarantors",
+            "fieldtype": "Table",
+            "label": "Guarantors",
+            "options": "SACCO Guarantor"
+        },
+        {
+            "default": "0",
+            "fieldname": "total_principal_demanded",
+            "fieldtype": "Currency",
+            "label": "Total Principal Demanded",
+            "read_only": 1,
+            "allow_on_submit": 1
+        },
+        {
+            "default": "0",
+            "fieldname": "total_interest_demanded",
+            "fieldtype": "Currency",
+            "label": "Total Interest Demanded",
+            "read_only": 1,
+            "allow_on_submit": 1
+        },
+        {
+            "fieldname": "amended_from",
+            "fieldtype": "Link",
+            "label": "Amended From",
+            "no_copy": 1,
+            "options": "SACCO Loan",
+            "read_only": 1
+        }
+    ],
+    "is_submittable": 1,
+    "links": [],
+    "modified": "2024-01-26 10:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Sacco",
+    "name": "SACCO Loan",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "submit": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

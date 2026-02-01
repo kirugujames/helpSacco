@@ -1,0 +1,89 @@
+{
+    "actions": [],
+    "autoname": "LREP-.#####",
+    "creation": "2024-01-26 10:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "loan",
+        "member",
+        "payment_amount",
+        "payment_date",
+        "payment_mode",
+        "reference_number",
+        "amended_from"
+    ],
+    "fields": [
+        {
+            "fieldname": "loan",
+            "fieldtype": "Link",
+            "label": "Loan",
+            "options": "SACCO Loan",
+            "reqd": 1
+        },
+        {
+            "fieldname": "member",
+            "fieldtype": "Link",
+            "label": "Member",
+            "options": "SACCO Member",
+            "read_only": 1
+        },
+        {
+            "fieldname": "payment_amount",
+            "fieldtype": "Currency",
+            "label": "Payment Amount",
+            "reqd": 1
+        },
+        {
+            "default": "Today",
+            "fieldname": "payment_date",
+            "fieldtype": "Date",
+            "label": "Payment Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "payment_mode",
+            "fieldtype": "Select",
+            "label": "Payment Mode",
+            "options": "Cash\nBank Transfer\nM-Pesa\nCheque\nSavings"
+        },
+        {
+            "fieldname": "reference_number",
+            "fieldtype": "Data",
+            "label": "Reference Number"
+        },
+        {
+            "fieldname": "amended_from",
+            "fieldtype": "Link",
+            "label": "Amended From",
+            "no_copy": 1,
+            "options": "SACCO Loan Repayment",
+            "read_only": 1
+        }
+    ],
+    "is_submittable": 1,
+    "links": [],
+    "modified": "2024-01-26 10:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Sacco",
+    "name": "SACCO Loan Repayment",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "submit": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": []
+}

@@ -1,0 +1,224 @@
+{
+    "actions": [],
+    "autoname": "MEM-.#####",
+    "creation": "2024-01-26 10:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "personal_information_section",
+        "first_name",
+        "last_name",
+        "member_name",
+        "email",
+        "village",
+        "documents_section",
+        "national_id_image",
+        "passport_photo",
+        "column_break_1",
+        "status",
+        "registration_fee_paid",
+        "loan_eligible",
+        "finance_details_section",
+        "customer_link",
+        "ledger_account",
+        "savings_account",
+        "total_savings",
+        "total_loan_outstanding",
+        "active_loan",
+        "user"
+    ],
+    "fields": [
+        {
+            "fieldname": "personal_information_section",
+            "fieldtype": "Section Break",
+            "label": "Personal Information"
+        },
+        {
+            "fieldname": "first_name",
+            "fieldtype": "Data",
+            "label": "First Name",
+            "reqd": 1
+        },
+        {
+            "fieldname": "last_name",
+            "fieldtype": "Data",
+            "label": "Last Name",
+            "reqd": 1
+        },
+        {
+            "fieldname": "member_name",
+            "fieldtype": "Data",
+            "label": "Full Member Name",
+            "read_only": 1
+        },
+        {
+            "fieldname": "email",
+            "fieldtype": "Data",
+            "label": "Email",
+            "options": "Email",
+            "unique": 1
+        },
+        {
+            "fieldname": "phone",
+            "fieldtype": "Data",
+            "label": "Phone Number",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "fieldname": "national_id",
+            "fieldtype": "Data",
+            "label": "National ID",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "fieldname": "county",
+            "fieldtype": "Data",
+            "label": "County"
+        },
+        {
+            "fieldname": "sub_county",
+            "fieldtype": "Data",
+            "label": "Sub County"
+        },
+        {
+            "fieldname": "ward",
+            "fieldtype": "Data",
+            "label": "Ward"
+        },
+        {
+            "fieldname": "village",
+            "fieldtype": "Data",
+            "label": "Village"
+        },
+        {
+            "fieldname": "documents_section",
+            "fieldtype": "Section Break",
+            "label": "Identification Documents"
+        },
+        {
+            "fieldname": "national_id_image",
+            "fieldtype": "Attach Image",
+            "label": "National ID Image"
+        },
+        {
+            "fieldname": "passport_photo",
+            "fieldtype": "Attach Image",
+            "label": "Passport Photo"
+        },
+        {
+            "fieldname": "column_break_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "Probation",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Probation\nActive\nSuspended\nInactive\nPending Payment"
+        },
+        {
+            "default": "0",
+            "fieldname": "registration_fee_paid",
+            "fieldtype": "Check",
+            "label": "Registration Fee Paid"
+        },
+        {
+            "default": "0",
+            "fieldname": "loan_eligible",
+            "fieldtype": "Check",
+            "label": "Loan Eligible"
+        },
+        {
+            "fieldname": "finance_details_section",
+            "fieldtype": "Section Break",
+            "label": "Finance Details"
+        },
+        {
+            "fieldname": "customer_link",
+            "fieldtype": "Link",
+            "label": "Customer Link",
+            "options": "Customer",
+            "read_only": 1
+        },
+        {
+            "fieldname": "ledger_account",
+            "fieldtype": "Link",
+            "label": "Loan Account",
+            "options": "Account",
+            "read_only": 1
+        },
+        {
+            "fieldname": "savings_account",
+            "fieldtype": "Link",
+            "label": "Savings Account",
+            "options": "Account",
+            "read_only": 1
+        },
+        {
+            "fieldname": "total_savings",
+            "fieldtype": "Currency",
+            "label": "Total Savings",
+            "read_only": 1
+        },
+        {
+            "fieldname": "total_loan_outstanding",
+            "fieldtype": "Currency",
+            "label": "Total Loan Outstanding",
+            "read_only": 1
+        },
+        {
+            "fieldname": "active_loan",
+            "fieldtype": "Link",
+            "label": "Active Loan",
+            "options": "SACCO Loan",
+            "read_only": 1
+        },
+        {
+            "fieldname": "user",
+            "fieldtype": "Link",
+            "label": "User",
+            "options": "User",
+            "read_only": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "is_submittable": 0,
+    "links": [],
+    "modified": "2024-01-26 10:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Sacco",
+    "name": "SACCO Member",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "SACCO Admin",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}
