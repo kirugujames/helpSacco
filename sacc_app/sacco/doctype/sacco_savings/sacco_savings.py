@@ -36,8 +36,12 @@ class SACCOSavings(Document):
 		
 		# Get Member Account
 		member = frappe.get_doc("SACCO Member", self.member)
-		if not member.ledger_account:
-			frappe.throw(f"Member {self.member} does not have a linked Ledger Account.")
+		if not member.savings_account:
+			frappe.throw(
+				f"Member {self.member} does not have a linked Savings Account. "
+				"Please update the member profile or ensure accounts are provisioned.",
+				title="Missing Savings Account"
+			)
 			
 		member_account = member.savings_account
 		
@@ -60,7 +64,7 @@ class SACCOSavings(Document):
 		if self.reference_number:
 			je.cheque_no = self.reference_number
 			je.cheque_date = self.posting_date
-		je.user_remark = f"Savings {self.type} for {self.member}"
+		je.user_remark = f"Savings {self.type} for {self.member} (Ref: {self.name})"
 		
 		amount = flt(self.amount)
 		
@@ -75,7 +79,9 @@ class SACCOSavings(Document):
 				"account": member_account,
 				"debit_in_account_currency": 0,
 				"credit_in_account_currency": amount,
-				"is_advance": "Yes"
+				"is_advance": "Yes",
+				"party_type": "Customer",
+				"party": member.customer_link
 			})
 		else:
 			# Withdrawal: Dr Member Savings (Liability DOWN), Cr Cash/Bank
@@ -83,7 +89,8 @@ class SACCOSavings(Document):
 				"account": member_account,
 				"debit_in_account_currency": amount,
 				"credit_in_account_currency": 0,
-				"is_advance": "Yes"
+				"party_type": "Customer",
+				"party": member.customer_link
 			})
 			je.append("accounts", {
 				"account": cash_account,
@@ -98,18 +105,7 @@ class SACCOSavings(Document):
 			je.cancel()
 
 	def update_member_savings(self):
-		# Calculate total savings for member
-		results = frappe.db.get_all("SACCO Savings", 
-			filters={"member": self.member, "docstatus": 1}, 
-			fields=["type", "amount"])
-		
-		total = 0
-		for r in results:
-			if r.type == "Deposit":
-				total += flt(r.amount)
-			else:
-				total -= flt(r.amount)
-		
-		print(f"DEBUG: Calculated total savings for {self.member}: {total}")
-		frappe.db.set_value("SACCO Member", self.member, "total_savings", total)
+		# Calculate total savings for member using central logic (GL based)
+		member = frappe.get_doc("SACCO Member", self.member)
+		member.get_balances()
 		frappe.db.commit() # Ensure persisted for tests

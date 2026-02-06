@@ -145,6 +145,11 @@ class SACCOLoan(Document):
 		self.status = "Disursed" # Or Active
 		self.make_disbursement_entry()
 		self.update_member_status()
+		
+		# Refresh balances immediately
+		member = frappe.get_doc("SACCO Member", self.member)
+		member.get_balances()
+		
 		self.status = "Active"
 		self.db_set("status", "Active")
 

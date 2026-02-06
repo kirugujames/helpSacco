@@ -14,16 +14,19 @@ def get_member_stats():
     first_day = get_first_day(today)
     new_members = frappe.db.count("SACCO Member", filters={"creation": [">=", first_day]})
     
-    # Other members (Probation, Inactive, Suspended, etc.)
-    other_members = total_members - active_members
-    
+    # Aggregated Financials
+    total_savings = frappe.db.get_value("SACCO Member", {}, "sum(total_savings)") or 0
+    total_loans = frappe.db.get_value("SACCO Member", {}, "sum(total_loan_outstanding)") or 0
+
     return {
         "status": "success",
         "data": {
             "total_members": total_members,
             "active_members": active_members,
             "new_members_this_month": new_members,
-            "other_members": other_members
+            "other_members": other_members,
+            "total_savings": flt(total_savings),
+            "total_loans": flt(total_loans)
         }
     }
 
@@ -50,7 +53,11 @@ def get_member_list(limit_start=0, limit_page_length=20, search=None, status=Non
     members = frappe.db.get_all("SACCO Member",
         filters=filters,
         or_filters=or_filters,
-        fields=["name", "member_name", "email", "phone", "status", "registration_fee_paid", "creation as registration_date"],
+        fields=[
+            "name", "member_name", "email", "phone", "status", 
+            "registration_fee_paid", "total_savings", "total_loan_outstanding",
+            "creation as registration_date"
+        ],
         limit_start=limit_start,
         limit_page_length=limit_page_length,
         order_by="creation desc"
@@ -61,27 +68,34 @@ def get_member_list(limit_start=0, limit_page_length=20, search=None, status=Non
         "data": members
     }
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=True, methods=['POST', 'PATCH', 'PUT'])
 def edit_member(member_id, first_name=None, last_name=None, email=None, phone=None, 
                 national_id=None, county=None, sub_county=None, ward=None, village=None,
                 national_id_image=None, passport_photo=None):
+    """
+    Update member details. Supports POST, PATCH, and PUT methods.
+    Only updates fields that are explicitly provided.
+    """
     if not member_id:
         frappe.throw("Member ID is required")
         
     doc = frappe.get_doc("SACCO Member", member_id)
     
-    if first_name: doc.first_name = first_name
-    if last_name: doc.last_name = last_name
-    if email: doc.email = email
-    if phone: doc.phone = phone
-    if national_id: doc.national_id = national_id
-    if county: doc.county = county
-    if sub_county: doc.sub_county = sub_county
-    if ward: doc.ward = ward
-    if village: doc.village = village
+    # Store original email to check if it's changing
+    original_email = doc.email
+    
+    # Update fields only if provided (not None)
+    if first_name is not None: doc.first_name = first_name
+    if last_name is not None: doc.last_name = last_name
+    if email is not None: doc.email = email
+    if phone is not None: doc.phone = phone
+    if national_id is not None: doc.national_id = national_id
+    if county is not None: doc.county = county
+    if sub_county is not None: doc.sub_county = sub_county
+    if ward is not None: doc.ward = ward
+    if village is not None: doc.village = village
 
-    # Process Base64 images for updates (using helper from api.py if available, 
-    # but member_api.py doesn't import it. Let's use the logic directly or import.)
+    # Process Base64 images for updates
     from sacc_app.api import save_base64_image
 
     if national_id_image:
@@ -98,9 +112,42 @@ def edit_member(member_id, first_name=None, last_name=None, email=None, phone=No
             "name": doc.name,
             "member_name": doc.member_name,
             "email": doc.email,
-            "phone": doc.phone
+            "phone": doc.phone,
+            "status": doc.status
         }
     }
+
+@frappe.whitelist(allow_guest=True, methods=['PATCH', 'PUT'])
+def update_member(member_id, data=None, **kwargs):
+    """
+    RESTful endpoint for updating members. Supports PATCH and PUT methods.
+    Accepts data as JSON object or individual parameters.
+    """
+    if not member_id:
+        frappe.throw("Member ID is required")
+    
+    # Handle data parameter (JSON string or dict) or kwargs
+    if not data:
+        data = kwargs
+    if isinstance(data, str):
+        import json
+        data = json.loads(data)
+    
+    # Use edit_member for the actual update
+    return edit_member(
+        member_id=member_id,
+        first_name=data.get("first_name"),
+        last_name=data.get("last_name"),
+        email=data.get("email"),
+        phone=data.get("phone"),
+        national_id=data.get("national_id"),
+        county=data.get("county"),
+        sub_county=data.get("sub_county"),
+        ward=data.get("ward"),
+        village=data.get("village"),
+        national_id_image=data.get("national_id_image"),
+        passport_photo=data.get("passport_photo")
+    )
 
 @frappe.whitelist(allow_guest=True)
 def disable_member(member_id):
@@ -131,6 +178,39 @@ def enable_member(member_id):
     }
 
 @frappe.whitelist(allow_guest=True)
+def update_member_status(member_id, status):
+    """
+    Update member status to any valid status value.
+    Valid statuses: Probation, Active, Suspended, Inactive, Pending Payment
+    """
+    if not member_id:
+        frappe.throw("Member ID is required")
+    
+    if not status:
+        frappe.throw("Status is required")
+    
+    # Validate status value
+    valid_statuses = ["Probation", "Active", "Suspended", "Inactive", "Pending Payment"]
+    if status not in valid_statuses:
+        frappe.throw(f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
+    
+    doc = frappe.get_doc("SACCO Member", member_id)
+    old_status = doc.status
+    doc.status = status
+    doc.save(ignore_permissions=True)
+    
+    return {
+        "status": "success",
+        "message": f"Member {member_id} status updated from {old_status} to {status}",
+        "data": {
+            "member_id": member_id,
+            "old_status": old_status,
+            "new_status": status
+        }
+    }
+
+
+@frappe.whitelist(allow_guest=True)
 def get_member_full_details(member_id):
     if not member_id:
         frappe.throw("Member ID is required")
@@ -139,6 +219,7 @@ def get_member_full_details(member_id):
         return {"status": "error", "message": f"Member {member_id} not found"}
         
     doc = frappe.get_doc("SACCO Member", member_id)
+    doc.get_balances() # Ensure balances are recalculated from GL
     
     # 1. Registration details including images
     member_data = doc.as_dict()

@@ -86,7 +86,7 @@ class SACCOLoanRepayment(Document):
 		je.posting_date = self.payment_date
 		je.company = company
 		je.voucher_type = "Journal Entry"
-		je.user_remark = f"Loan Repayment: {self.loan} (Principal: {principal_portion}, Interest: {interest_portion})"
+		je.user_remark = f"Loan Repayment: {self.loan} (Ref: {self.name}) (Principal: {principal_portion}, Interest: {interest_portion})"
 
 		# Dr Cash or Savings Account (Total Payment)
 		debit_account = cash_account

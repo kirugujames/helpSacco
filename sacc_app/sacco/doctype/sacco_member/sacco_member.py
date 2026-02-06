@@ -9,14 +9,46 @@ from sacc_app.notify import send_member_email
 class SACCOMember(Document):
 	def validate(self):
 		self.member_name = f"{self.first_name} {self.last_name}"
+		self.validate_unique_email()
 		self.get_balances()
+	
+	def validate_unique_email(self):
+		"""Validate that email is unique across all members"""
+		if not self.email:
+			return
+		
+		# For new documents, self.name will be None
+		# For existing documents being updated, self.name will have a value
+		if self.name:
+			# Updating existing member - check if email belongs to another member
+			existing = frappe.db.get_value(
+				"SACCO Member",
+				{"email": self.email, "name": ["!=", self.name]},
+				["name", "member_name"],
+				as_dict=True
+			)
+		else:
+			# Creating new member - check if email exists at all
+			existing = frappe.db.get_value(
+				"SACCO Member",
+				{"email": self.email},
+				["name", "member_name"],
+				as_dict=True
+			)
+		
+		if existing:
+			frappe.throw(
+				f"Email {self.email} is already registered to member {existing.member_name} ({existing.name}). "
+				"Please use a different email address.",
+				title="Duplicate Email"
+			)
 
 	def onload(self):
 		self.get_balances()
 
 	def get_balances(self):
 		if not self.savings_account and not self.ledger_account:
-			return
+			return 0, 0
 
 		# 1. Savings Balance = Sum(Credit) - Sum(Debit)
 		if self.savings_account:
@@ -40,6 +72,8 @@ class SACCOMember(Document):
 				"total_savings": self.total_savings,
 				"total_loan_outstanding": self.total_loan_outstanding
 			}, update_modified=False)
+		
+		return self.total_savings, self.total_loan_outstanding
 	def after_insert(self):
 		self.create_customer()
 		self.create_registration_invoice()

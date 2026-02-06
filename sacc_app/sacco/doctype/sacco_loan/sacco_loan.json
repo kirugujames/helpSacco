@@ -6,6 +6,7 @@
     "engine": "InnoDB",
     "field_order": [
         "member",
+        "purpose",
         "loan_type",
         "loan_amount",
         "interest_rate",
@@ -35,6 +36,11 @@
             "label": "Member",
             "options": "SACCO Member",
             "reqd": 1
+        },
+        {
+            "fieldname": "purpose",
+            "fieldtype": "Text",
+            "label": "Loan Purpose"
         },
         {
             "fieldname": "loan_product",

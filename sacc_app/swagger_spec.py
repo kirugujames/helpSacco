@@ -18,9 +18,12 @@ def get_swagger_spec():
             {"name": "Members", "description": "Member Management and Profiles"},
             {"name": "Savings", "description": "Savings Deposits and Withdrawals"},
             {"name": "Loans", "description": "Loan Products, Applications, and Repayments"},
+            {"name": "Accounts", "description": "Account management and hierarchy"},
+            {"name": "Expenses", "description": "Expense Tracking and Management"},
+            {"name": "Welfare", "description": "Welfare Contributions and Benefits"},
+            {"name": "Roles & Permissions", "description": "System roles, access control, and permissions"},
             {"name": "Reports", "description": "Financial and Activity Reports"},
             {"name": "Locations", "description": "Geographical Data (Kenya)"},
-            {"name": "Welfare", "description": "Welfare Contributions and Benefits"},
             {"name": "Admin", "description": "System Settings, Roles, and Permissions"}
         ],
         "paths": {
@@ -74,6 +77,14 @@ def get_swagger_spec():
                     "summary": "Get Member Profile",
                     "security": [{"ApiKeyAuth": []}],
                     "responses": {"200": {"description": "Member Profile Data"}}
+                }
+            },
+            "/sacc_app.api.delete_member": {
+                "post": {
+                    "tags": ["Members"],
+                    "summary": "Delete Member Record",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"member_id": {"type": "string"}}, "required": ["member_id"]}}}},
+                    "responses": {"200": {"description": "Deleted"}}
                 }
             },
             "/sacc_app.api.create_member_application": {
@@ -190,6 +201,27 @@ def get_swagger_spec():
                     "responses": {"200": {"description": "Success"}}
                 }
             },
+            "/sacc_app.api.generate_loan_ready_member": {
+                "post": {
+                    "tags": ["Members"],
+                    "summary": "Generate Test Member (Loan Ready)",
+                    "description": "Creates a random member, pays registration fee, and deposits initial savings.",
+                    "requestBody": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "savings_amount": {"type": "number", "default": 100000},
+                                        "registration_date": {"type": "string", "format": "date", "description": "Backdate the member registration (YYYY-MM-DD)"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "responses": {"200": {"description": "Member Generated"}}
+                }
+            },
             "/sacc_app.member_api.get_member_full_details": {
                 "get": {
                     "tags": ["Members"],
@@ -238,6 +270,43 @@ def get_swagger_spec():
                     "responses": {"200": {"description": "Growth Data"}}
                 }
             },
+            "/sacc_app.api.get_savings_dashboard": {
+                "get": {
+                    "tags": ["Savings"],
+                    "summary": "Get Savings Dashboard Stats",
+                    "responses": {"200": {"description": "Dashboard Data"}}
+                }
+            },
+            "/sacc_app.api.get_savings_vs_expense": {
+                "get": {
+                    "tags": ["Savings", "Reports"],
+                    "summary": "Get Savings vs Expense (Last 6 Months)",
+                    "responses": {"200": {"description": "Comparison Data"}}
+                }
+            },
+            "/sacc_app.api.get_top_savers": {
+                "get": {
+                    "tags": ["Savings"],
+                    "summary": "Get Top 5 Savers",
+                    "responses": {"200": {"description": "List of Top Savers"}}
+                }
+            },
+            "/sacc_app.api.get_savings_transactions": {
+                "get": {
+                    "tags": ["Savings"],
+                    "summary": "Get Savings Transactions (Paginated & Filterable)",
+                    "parameters": [
+                        {"name": "limit_start", "in": "query", "schema": {"type": "integer", "default": 0}},
+                        {"name": "limit_page_length", "in": "query", "schema": {"type": "integer", "default": 20}},
+                        {"name": "member", "in": "query", "schema": {"type": "string"}},
+                        {"name": "type", "in": "query", "schema": {"type": "string", "enum": ["Deposit", "Withdrawal"]}},
+                        {"name": "date_from", "in": "query", "schema": {"type": "string", "format": "date"}},
+                        {"name": "date_to", "in": "query", "schema": {"type": "string", "format": "date"}},
+                        {"name": "searchTerm", "in": "query", "schema": {"type": "string"}}
+                    ],
+                    "responses": {"200": {"description": "List of Transactions"}}
+                }
+            },
 
             # --- Loans ---
             "/sacc_app.api.apply_for_loan": {
@@ -245,8 +314,32 @@ def get_swagger_spec():
                     "tags": ["Loans"],
                     "summary": "Apply for a Loan",
                     "security": [{"ApiKeyAuth": []}],
-                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"member": {"type": "string"}, "amount": {"type": "number"}, "loan_product": {"type": "string"}, "guarantors": {"type": "array", "items": {"type": "object"}}}, "required": ["member", "amount", "loan_product"]}}}},
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"member": {"type": "string"}, "amount": {"type": "number"}, "loan_product": {"type": "string"}, "repayment_period": {"type": "integer"}, "purpose": {"type": "string"}, "guarantors": {"type": "array", "items": {"type": "object"}}}, "required": ["member", "amount", "loan_product"]}}}},
                     "responses": {"200": {"description": "Applied"}}
+                }
+            },
+            "/sacc_app.api.submit_loan_application": {
+                "post": {
+                    "tags": ["Loans"],
+                    "summary": "Submit Loan Application",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"loan_id": {"type": "string"}}, "required": ["loan_id"]}}}},
+                    "responses": {"200": {"description": "Submitted"}}
+                }
+            },
+            "/sacc_app.api.approve_loan_application": {
+                "post": {
+                    "tags": ["Loans"],
+                    "summary": "Approve Loan Application",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"loan_id": {"type": "string"}}, "required": ["loan_id"]}}}},
+                    "responses": {"200": {"description": "Approved"}}
+                }
+            },
+            "/sacc_app.api.disburse_loan": {
+                "post": {
+                    "tags": ["Loans"],
+                    "summary": "Disburse Loan (Submit & Activate)",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"loan_id": {"type": "string"}}, "required": ["loan_id"]}}}},
+                    "responses": {"200": {"description": "Disbursed"}}
                 }
             },
             "/sacc_app.api.create_loan_product": {
@@ -278,11 +371,18 @@ def get_swagger_spec():
                     "responses": {"200": {"description": "Created"}}
                 }
             },
+            "/sacc_app.api.get_loan_products": {
+                "get": {
+                    "tags": ["Loans"],
+                    "summary": "Get Loan Products Config (Simple)",
+                    "responses": {"200": {"description": "List of configurations"}}
+                }
+            },
             "/sacc_app.api.get_all_loan_products": {
                 "get": {
                     "tags": ["Loans"],
-                    "summary": "Get All Loan Products",
-                    "responses": {"200": {"description": "List"}}
+                    "summary": "Get All Loan Products Detail",
+                    "responses": {"200": {"description": "Detailed list of products"}}
                 }
             },
             "/sacc_app.api.disburse_loan": {
@@ -293,11 +393,18 @@ def get_swagger_spec():
                     "responses": {"200": {"description": "Disbursed"}}
                 }
             },
+            "/sacc_app.api.get_all_loan_repayments": {
+                "get": {
+                    "tags": ["Loans"],
+                    "summary": "Get All Loan Repayments",
+                    "responses": {"200": {"description": "List"}}
+                }
+            },
             "/sacc_app.api.record_loan_repayment": {
                 "post": {
                     "tags": ["Loans"],
                     "summary": "Record Loan Repayment",
-                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"loan": {"type": "string"}, "amount": {"type": "number"}, "member": {"type": "string"}, "deduct_from_savings": {"type": "boolean"}, "reference": {"type": "string"}}, "required": ["loan", "amount", "member"]}}}},
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"loan": {"type": "string"}, "amount": {"type": "number"}, "member": {"type": "string"}, "mode": {"type": "string"}, "deduct_from_savings": {"type": "boolean"}, "reference": {"type": "string"}}, "required": ["loan", "amount", "member"]}}}},
                     "responses": {"200": {"description": "Success"}}
                 }
             },
@@ -307,6 +414,38 @@ def get_swagger_spec():
                     "summary": "Get Member Loans",
                     "parameters": [{"name": "member", "in": "query", "schema": {"type": "string"}}],
                     "responses": {"200": {"description": "Loans"}}
+                }
+            },
+            "/sacc_app.api.get_loan_dashboard": {
+                "get": {
+                    "tags": ["Loans"],
+                    "summary": "Get Loan Dashboard Statistics",
+                    "responses": {"200": {"description": "Dashboard Stats"}}
+                }
+            },
+            "/sacc_app.api.get_loan_applications": {
+                "get": {
+                    "tags": ["Loans"],
+                    "summary": "Get Loan Applications (Paginated & Filterable)",
+                    "parameters": [
+                        {"name": "status", "in": "query", "schema": {"type": "string"}},
+                        {"name": "member_name", "in": "query", "schema": {"type": "string"}},
+                        {"name": "member_id", "in": "query", "schema": {"type": "string"}},
+                        {"name": "loan_id", "in": "query", "schema": {"type": "string"}},
+                        {"name": "limit_start", "in": "query", "schema": {"type": "integer", "default": 0}},
+                        {"name": "limit_page_length", "in": "query", "schema": {"type": "integer", "default": 20}}
+                    ],
+                    "responses": {"200": {"description": "List of Loans"}}
+                }
+            },
+            "/sacc_app.api.get_loan_application_by_id": {
+                "get": {
+                    "tags": ["Loans"],
+                    "summary": "Get Loan Application by ID",
+                    "parameters": [
+                        {"name": "loan_id", "in": "query", "schema": {"type": "string"}, "required": True}
+                    ],
+                    "responses": {"200": {"description": "Loan Details"}}
                 }
             },
             "/sacc_app.dashboard_api.get_loan_breakdown": {
@@ -386,6 +525,64 @@ def get_swagger_spec():
                     "responses": {"200": {"description": "Report"}}
                 }
             },
+            "/sacc_app.api.get_loan_performance_report": {
+                "get": {
+                    "tags": ["Reports"],
+                    "summary": "Loan Performance Overview",
+                    "responses": {"200": {"description": "Report"}}
+                }
+            },
+            "/sacc_app.api.get_interest_collection_report": {
+                "get": {
+                    "tags": ["Reports"],
+                    "summary": "Interest Collection Report",
+                    "parameters": [
+                        {"name": "loan_product", "in": "query", "schema": {"type": "string"}},
+                        {"name": "from_date", "in": "query", "schema": {"type": "string", "format": "date"}},
+                        {"name": "to_date", "in": "query", "schema": {"type": "string", "format": "date"}}
+                    ],
+                    "responses": {"200": {"description": "Report"}}
+                }
+            },
+            "/sacc_app.api.get_loan_ledger_report": {
+                "get": {
+                    "tags": ["Reports"],
+                    "summary": "Loan Ledger Report",
+                    "description": "Get loan ledger transactions with running balance. Filter by date range, member, or loan ID.",
+                    "parameters": [
+                        {"name": "date_from", "in": "query", "schema": {"type": "string", "format": "date"}},
+                        {"name": "date_to", "in": "query", "schema": {"type": "string", "format": "date"}},
+                        {"name": "member", "in": "query", "schema": {"type": "string"}},
+                        {"name": "loan_id", "in": "query", "schema": {"type": "string"}},
+                        {"name": "limit_start", "in": "query", "schema": {"type": "integer", "default": 0}},
+                        {"name": "limit_page_length", "in": "query", "schema": {"type": "integer", "default": 100}}
+                    ],
+                    "responses": {"200": {"description": "Ledger Report with Running Balance"}}
+                }
+            },
+            "/sacc_app.api.get_auth_logs": {
+                "get": {
+                    "tags": ["Reports", "Admin"],
+                    "summary": "Get Authentication Logs",
+                    "parameters": [
+                        {"name": "user", "in": "query", "schema": {"type": "string"}},
+                        {"name": "from_date", "in": "query", "schema": {"type": "string", "format": "date"}},
+                        {"name": "to_date", "in": "query", "schema": {"type": "string", "format": "date"}}
+                    ],
+                    "responses": {"200": {"description": "Logs List"}}
+                }
+            },
+            "/sacc_app.api.get_document_history": {
+                "get": {
+                    "tags": ["Reports", "Admin"],
+                    "summary": "Get Audit History for a Document",
+                    "parameters": [
+                        {"name": "doctype", "in": "query", "schema": {"type": "string"}, "required": True},
+                        {"name": "docname", "in": "query", "schema": {"type": "string"}, "required": True}
+                    ],
+                    "responses": {"200": {"description": "Timeline"}}
+                }
+            },
             "/sacc_app.api.get_all_audit_trails": {
                 "get": {
                     "tags": ["Reports", "Admin"],
@@ -444,6 +641,193 @@ def get_swagger_spec():
                 }
             },
 
+            "/sacc_app.api.get_transactions_dashboard": {
+                "get": {
+                    "tags": ["Transactions"],
+                    "summary": "Get Transaction Dashboard Stats",
+                    "responses": {"200": {"description": "Stats Data"}}
+                }
+            },
+            "/sacc_app.api.get_all_transactions": {
+                "get": {
+                    "tags": ["Transactions"],
+                    "summary": "Get All Transactions (Paginated & Filterable)",
+                    "parameters": [
+                        {"name": "limit_start", "in": "query", "schema": {"type": "integer", "default": 0}},
+                        {"name": "limit_page_length", "in": "query", "schema": {"type": "integer", "default": 20}},
+                        {"name": "category", "in": "query", "schema": {"type": "string", "enum": ["Savings", "Loan", "Expense"]}},
+                        {"name": "start_date", "in": "query", "schema": {"type": "string", "format": "date"}},
+                        {"name": "end_date", "in": "query", "schema": {"type": "string", "format": "date"}},
+                        {"name": "status", "in": "query", "schema": {"type": "string", "enum": ["Completed", "Cancelled", "Draft"]}},
+                        {"name": "search", "in": "query", "schema": {"type": "string"}}
+                    ],
+                    "responses": {"200": {"description": "List of Transactions"}}
+                }
+            },
+            "/sacc_app.api.get_transaction_details": {
+                "get": {
+                    "tags": ["Transactions"],
+                    "summary": "Get Transaction Details",
+                    "parameters": [{"name": "transaction_id", "in": "query", "schema": {"type": "string"}, "required": True}],
+                    "responses": {"200": {"description": "Transaction Details"}}
+                }
+            },
+            # --- Accounts ---
+            "/sacc_app.api.create_account": {
+                "post": {
+                    "tags": ["Accounts"],
+                    "summary": "Create GL Account",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"account_name": {"type": "string"}, "parent_account": {"type": "string"}, "is_group": {"type": "integer", "enum": [0, 1]}, "account_type": {"type": "string"}}, "required": ["account_name", "parent_account"]}}}},
+                    "responses": {"200": {"description": "Created"}}
+                }
+            },
+            "/sacc_app.api.get_parent_accounts": {
+                "get": {
+                    "tags": ["Accounts"],
+                    "summary": "Get Group Accounts (Parents)",
+                    "responses": {"200": {"description": "List"}}
+                }
+            },
+            "/sacc_app.api.get_expense_accounts": {
+                "get": {
+                    "tags": ["Accounts"],
+                    "summary": "Get Expense Accounts",
+                    "responses": {"200": {"description": "List"}}
+                }
+            },
+            "/sacc_app.api.get_all_accounts_with_balances": {
+                "get": {
+                    "tags": ["Accounts"],
+                    "summary": "Get All Accounts with Current Balances",
+                    "responses": {"200": {"description": "List"}}
+                }
+            },
+            # --- Expenses ---
+            "/sacc_app.expense_api.get_expense_dashboard_stats": {
+                "get": {
+                    "tags": ["Expenses"],
+                    "summary": "Get Expense Dashboard Statistics",
+                    "responses": {"200": {"description": "Dashboard Stats"}}
+                }
+            },
+            "/sacc_app.expense_api.get_expenses_by_category": {
+                "get": {
+                    "tags": ["Expenses"],
+                    "summary": "Get Expenses Breakdown by Category",
+                    "responses": {"200": {"description": "Category Breakdown"}}
+                }
+            },
+            "/sacc_app.expense_api.get_monthly_expense_trends": {
+                "get": {
+                    "tags": ["Expenses"],
+                    "summary": "Get Monthly Expense Trends (Last 6 Months)",
+                    "responses": {"200": {"description": "Monthly Trends"}}
+                }
+            },
+            "/sacc_app.expense_api.get_all_expense_transactions": {
+                "get": {
+                    "tags": ["Expenses"],
+                    "summary": "Get All Expense Transactions (Paginated & Filterable)",
+                    "parameters": [
+                        {"name": "limit_start", "in": "query", "schema": {"type": "integer", "default": 0}},
+                        {"name": "limit_page_length", "in": "query", "schema": {"type": "integer", "default": 20}},
+                        {"name": "search", "in": "query", "schema": {"type": "string"}},
+                        {"name": "category", "in": "query", "schema": {"type": "string"}},
+                        {"name": "status", "in": "query", "schema": {"type": "string", "enum": ["Completed", "Cancelled"]}}
+                    ],
+                    "responses": {"200": {"description": "List of Expenses"}}
+                }
+            },
+            "/sacc_app.expense_api.get_expense_details": {
+                "get": {
+                    "tags": ["Expenses"],
+                    "summary": "Get Expense Transaction Details by ID",
+                    "parameters": [
+                        {"name": "expense_id", "in": "query", "schema": {"type": "string"}, "required": True}
+                    ],
+                    "responses": {"200": {"description": "Expense Details"}}
+                }
+            },
+            "/sacc_app.api.record_expense": {
+                "post": {
+                    "tags": ["Expenses"],
+                    "summary": "Record Expense (Journal Entry)",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"amount": {"type": "number"}, "expense_account": {"type": "string"}, "description": {"type": "string"}, "mode_of_payment": {"type": "string"}, "vendor_name": {"type": "string"}}, "required": ["amount", "expense_account", "description"]}}}},
+                    "responses": {"200": {"description": "Success"}}
+                }
+            },
+            "/sacc_app.api.get_all_expenses": {
+                "get": {
+                    "tags": ["Expenses"],
+                    "summary": "Get All Expenses (Vouchers)",
+                    "responses": {"200": {"description": "List"}}
+                }
+            },
+
+            # --- Roles & Permissions ---
+            "/sacc_app.api.get_all_roles": {
+                "get": {
+                    "tags": ["Roles & Permissions"],
+                    "summary": "Get All System Roles",
+                    "responses": {"200": {"description": "List"}}
+                }
+            },
+            "/sacc_app.api.create_role": {
+                "post": {
+                    "tags": ["Roles & Permissions"],
+                    "summary": "Create System Role",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"role_name": {"type": "string"}}, "required": ["role_name"]}}}},
+                    "responses": {"200": {"description": "Created"}}
+                }
+            },
+            "/sacc_app.api.update_role": {
+                "post": {
+                    "tags": ["Roles & Permissions"],
+                    "summary": "Update Role Access",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"role_name": {"type": "string"}, "desk_access": {"type": "integer", "enum": [0, 1]}}, "required": ["role_name"]}}}},
+                    "responses": {"200": {"description": "Updated"}}
+                }
+            },
+            "/sacc_app.api.delete_role": {
+                "post": {
+                    "tags": ["Roles & Permissions"],
+                    "summary": "Delete System Role",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"role_name": {"type": "string"}}, "required": ["role_name"]}}}},
+                    "responses": {"200": {"description": "Deleted"}}
+                }
+            },
+            "/sacc_app.api.get_role_permissions": {
+                "get": {
+                    "tags": ["Roles & Permissions"],
+                    "summary": "Get Permissions for a Role",
+                    "parameters": [{"name": "role", "in": "query", "schema": {"type": "string"}, "required": True}],
+                    "responses": {"200": {"description": "Permissions List"}}
+                }
+            },
+            "/sacc_app.api.assign_permission": {
+                "post": {
+                    "tags": ["Roles & Permissions"],
+                    "summary": "Assign DocType Permission to Role",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"doctype": {"type": "string"}, "role": {"type": "string"}, "read": {"type": "integer"}, "write": {"type": "integer"}, "create": {"type": "integer"}, "delete": {"type": "integer"}}, "required": ["doctype", "role"]}}}},
+                    "responses": {"200": {"description": "Assigned"}}
+                }
+            },
+            "/sacc_app.api.update_doctype_permissions": {
+                "post": {
+                    "tags": ["Roles & Permissions"],
+                    "summary": "Batch Update DocType Permissions",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"doctype": {"type": "string"}, "role": {"type": "string"}, "permissions": {"type": "object"}}, "required": ["doctype", "role", "permissions"]}}}},
+                    "responses": {"200": {"description": "Updated"}}
+                }
+            },
+            "/sacc_app.api.get_doctypes_and_permissions": {
+                "get": {
+                    "tags": ["Roles & Permissions"],
+                    "summary": "Get All DocTypes and their Active Permissions",
+                    "parameters": [{"name": "module", "in": "query", "schema": {"type": "string", "default": "Sacco"}}],
+                    "responses": {"200": {"description": "Data Map"}}
+                }
+            },
             # --- Admin ---
             "/sacc_app.dashboard_api.get_dashboard_stats": {
                 "get": {
@@ -464,6 +848,13 @@ def get_swagger_spec():
                     "responses": {"200": {"description": "Activity Feed"}}
                 }
             },
+            "/sacc_app.api.get_company_details": {
+                "get": {
+                    "tags": ["Admin"],
+                    "summary": "Get Company Details",
+                    "responses": {"200": {"description": "Company Details"}}
+                }
+            },
             "/sacc_app.api.get_sacco_settings": {
                 "get": {
                     "tags": ["Admin"],
@@ -475,8 +866,28 @@ def get_swagger_spec():
                 "post": {
                     "tags": ["Admin"],
                     "summary": "Update SACCO Global Settings",
-                    "requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},
+                    "requestBody": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "registration_fee": {"type": "number"},
+                                        "charge_registration_fee_on_onboarding": {"type": "integer", "enum": [0, 1]}
+                                    }
+                                }
+                            }
+                        }
+                    },
                     "responses": {"200": {"description": "Updated"}}
+                }
+            },
+            "/sacc_app.api.get_all_users": {
+                "get": {
+                    "tags": ["Admin"],
+                    "summary": "Get All System Users",
+                    "description": "Returns all users with their roles and status",
+                    "responses": {"200": {"description": "List of Users"}}
                 }
             },
             "/sacc_app.api.get_current_user": {
@@ -490,8 +901,24 @@ def get_swagger_spec():
                 "post": {
                     "tags": ["Admin"],
                     "summary": "Create System User",
-                    "requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"email": {"type": "string"}, "first_name": {"type": "string"}, "last_name": {"type": "string"}, "roles": {"type": "array", "items": {"type": "string"}}}, "required": ["email", "first_name", "last_name"]}}}},
                     "responses": {"200": {"description": "Created"}}
+                }
+            },
+            "/sacc_app.api.set_user_status": {
+                "post": {
+                    "tags": ["Admin"],
+                    "summary": "Enable/Disable User",
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {"user_id": {"type": "string"}, "status": {"type": "string", "enum": ["Enabled", "Disabled"]}}, "required": ["user_id", "status"]}}}},
+                    "responses": {"200": {"description": "Updated"}}
+                }
+            },
+            "/sacc_app.api.check_user_exists": {
+                "get": {
+                    "tags": ["Admin"],
+                    "summary": "Check if Email is Registered",
+                    "parameters": [{"name": "email", "in": "query", "schema": {"type": "string"}, "required": True}],
+                    "responses": {"200": {"description": "Exists Boolean"}}
                 }
             }
             # Note: Other niche admin APIs like permissions/roles are present but omitted from this condensed list for brevity in Swagger, 
