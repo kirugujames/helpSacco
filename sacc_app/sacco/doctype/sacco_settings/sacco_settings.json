@@ -6,7 +6,8 @@
     "engine": "InnoDB",
     "field_order": [
         "registration_fee",
-        "charge_registration_fee_on_onboarding"
+        "charge_registration_fee_on_onboarding",
+        "welfare_contribution_amount"
     ],
     "fields": [
         {
@@ -19,6 +20,11 @@
             "fieldname": "charge_registration_fee_on_onboarding",
             "fieldtype": "Check",
             "label": "Charge Registration Fee on Onboarding"
+        },
+        {
+            "fieldname": "welfare_contribution_amount",
+            "fieldtype": "Currency",
+            "label": "Welfare Contribution Amount"
         }
     ],
     "index_web_pages_for_search": 1,

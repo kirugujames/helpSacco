@@ -4,6 +4,7 @@ import string
 from frappe import _
 from frappe.utils import flt
 from sacc_app.swagger_spec import get_swagger_spec
+import sacc_app.budget_api # Expose budget APIs
 
 
 @frappe.whitelist(allow_guest=True)
@@ -515,6 +516,82 @@ def create_account(account_name, parent_account, is_group=0, account_type=None):
     acc.insert(ignore_permissions=True)
     return {"status": "success", "message": f"Account '{account_name}' created.", "name": acc.name}
 
+@frappe.whitelist(allow_guest=True)
+def update_account(account_name, data=None, **kwargs):
+    if not data:
+        data = kwargs
+    if isinstance(data, str):
+        import json
+        data = json.loads(data)
+        
+    company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
+    
+    # account_name passed might be the ID or the name. 
+    # Usually in Frappe, Account ID is "Name - Company".
+    # We should support finding it.
+    
+    account_id = None
+    if frappe.db.exists("Account", account_name):
+        account_id = account_name
+    elif frappe.db.exists("Account", {"account_name": account_name, "company": company}):
+        account_id = frappe.db.get_value("Account", {"account_name": account_name, "company": company}, "name")
+        
+    if not account_id:
+         return {"status": "error", "message": f"Account '{account_name}' not found."}
+         
+    doc = frappe.get_doc("Account", account_id)
+    
+    # Update fields
+    if "parent_account" in data:
+        new_parent = data.get("parent_account")
+        # Validate parent
+        parent_exists = frappe.db.exists("Account", {"account_name": new_parent, "company": company}) or frappe.db.exists("Account", new_parent)
+        if not parent_exists:
+             return {"status": "error", "message": f"Parent account '{new_parent}' not found."}
+        
+        # Resolve parent ID if name given
+        if not frappe.db.exists("Account", new_parent):
+            new_parent = frappe.db.get_value("Account", {"account_name": new_parent, "company": company}, "name")
+            
+        doc.parent_account = new_parent
+        
+    if "account_type" in data:
+        doc.account_type = data.get("account_type")
+        
+    if "account_name" in data:
+        doc.account_name = data.get("account_name")
+        
+    if "is_group" in data:
+        doc.is_group = int(data.get("is_group"))
+
+    doc.save(ignore_permissions=True)
+    return {"status": "success", "message": f"Account '{account_name}' updated.", "data": doc.as_dict()}
+
+@frappe.whitelist(allow_guest=True)
+def delete_account(account_name):
+    company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
+    
+    account_id = None
+    if frappe.db.exists("Account", account_name):
+        account_id = account_name
+    elif frappe.db.exists("Account", {"account_name": account_name, "company": company}):
+        account_id = frappe.db.get_value("Account", {"account_name": account_name, "company": company}, "name")
+        
+    if not account_id:
+         return {"status": "error", "message": f"Account '{account_name}' not found."}
+         
+    # Check for balance? Frappe delete logic usually handles validation but we can be safe.
+    from erpnext.accounts.utils import get_balance_on
+    balance = get_balance_on(account_id)
+    if balance != 0:
+        return {"status": "error", "message": f"Cannot delete account with non-zero balance: {balance}"}
+        
+    try:
+        frappe.delete_doc("Account", account_id)
+        return {"status": "success", "message": f"Account '{account_name}' deleted."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @frappe.whitelist(allow_guest= True  )
 def record_expense(amount, expense_account, description, mode_of_payment="Cash", vendor_name=None):
     company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
@@ -862,6 +939,10 @@ def get_all_expenses():
     return {"status": "success", "data": expenses}
 
 @frappe.whitelist(allow_guest= True  )
+def get_all_accounts():
+    return get_all_accounts_with_balances()
+
+@frappe.whitelist(allow_guest= True  )
 def get_all_accounts_with_balances():
     company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
     accounts = frappe.db.get_all("Account", filters={"company": company}, fields=["name", "account_name", "account_type", "root_type"])
@@ -988,31 +1069,44 @@ def get_trial_balance(from_date=None, to_date=None):
     return {"status": "success", "columns": columns, "data": data}
 
 @frappe.whitelist(allow_guest=True)
-def get_account_statement(account, from_date=None, to_date=None):
+@frappe.whitelist(allow_guest=True)
+def get_account_statement(account=None, member=None, from_date=None, to_date=None):
     from_date, to_date = get_report_dates(from_date, to_date)
     company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
     
+    target = account or member
+    if not target:
+         return {"status": "error", "message": "Please provide either 'account' or 'member'."}
+
     # Resolve account name if it's a SACCO Savings record, Member ID, or Loan ID
-    real_account = account
-    if not frappe.db.exists("Account", account):
-        # 1. Check if it's a member ID
-        member_data = frappe.db.get_value("SACCO Member", account, ["savings_account", "ledger_account"], as_dict=1)
-        if member_data:
-            # Default to savings account if it's just a member ID
-            real_account = member_data.savings_account
+    real_account = target
+    
+    # Check if target is a valid Account ID first
+    if not frappe.db.exists("Account", target):
+        # 0. Check if it's an Account Name
+        company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
+        acc_by_name = frappe.db.get_value("Account", {"account_name": target, "company": company}, "name")
+        if acc_by_name:
+            real_account = acc_by_name
         else:
-            # 2. Check if it's a SACCO Savings document name
-            member = frappe.db.get_value("SACCO Savings", account, "member")
-            if member:
-                real_account = frappe.db.get_value("SACCO Member", member, "savings_account")
+            # 1. Check if it's a member ID
+            member_data = frappe.db.get_value("SACCO Member", target, ["savings_account", "ledger_account"], as_dict=1)
+            if member_data:
+                # Default to savings account if it's just a member ID
+                real_account = member_data.savings_account
             else:
-                # 3. Check if it's a SACCO Loan document name
-                member = frappe.db.get_value("SACCO Loan", account, "member")
-                if member:
-                    real_account = frappe.db.get_value("SACCO Member", member, "ledger_account")
+                # 2. Check if it's a SACCO Savings document name
+                saved_member = frappe.db.get_value("SACCO Savings", target, "member")
+                if saved_member:
+                    real_account = frappe.db.get_value("SACCO Member", saved_member, "savings_account")
+                else:
+                    # 3. Check if it's a SACCO Loan document name
+                    loan_member = frappe.db.get_value("SACCO Loan", target, "member")
+                    if loan_member:
+                        real_account = frappe.db.get_value("SACCO Member", loan_member, "ledger_account")
 
     if not real_account or not frappe.db.exists("Account", real_account):
-        return {"status": "error", "message": f"Account {account} could not be resolved to a valid General Ledger account."}
+        return {"status": "error", "message": f"Account {target} could not be resolved to a valid General Ledger account."}
 
     filters = {
         "company": company,
@@ -1186,7 +1280,7 @@ def get_all_audit_trails(doctypes=None, from_date=None, to_date=None, limit=50):
 # --- Welfare Management ---
 
 @frappe.whitelist(allow_guest=True)
-def record_welfare_contribution(member, amount, purpose="Monthly Contribution", type="Contribution"):
+def record_welfare_contribution(member, amount, purpose="Monthly Contribution", type="Contribution", claim_id=None):
     doc = frappe.get_doc({
         "doctype": "SACCO Welfare",
         "member": member,
@@ -1195,6 +1289,13 @@ def record_welfare_contribution(member, amount, purpose="Monthly Contribution", 
         "type": type,
         "posting_date": frappe.utils.nowdate()
     })
+    
+    if claim_id:
+        if frappe.db.exists("SACCO Welfare Claim", claim_id):
+             doc.welfare_claim = claim_id
+        else:
+             frappe.throw(f"Welfare Claim {claim_id} not found")
+
     doc.insert(ignore_permissions=True)
     doc.submit()
     return {"status": "success", "message": "Welfare transaction recorded.", "id": doc.name}
@@ -1467,25 +1568,19 @@ def send_otp(email):
     frappe.cache().set_value(f"otp_{email}", otp, expires_in_sec=600)
     
     # Send via email
-    subject = _("Your SACCO Verification Code")
+    company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
+    company_name = frappe.db.get_value("Company", company, "company_name") or company or "SACCO"
+
+    subject = _("Your {0} Verification Code").format(company_name)
     message = f"""
-    <p>Your verification code is: <strong style="font-size: 1.2em;">{otp}</strong></p>
+    <p>Your verification code is: <strong style="font-size: 1.2em; color: #1a73e8;">{otp}</strong></p>
     <p>This code will expire in 10 minutes.</p>
+    <p>If you did not request this code, please ignore this email.</p>
     """
     
-    # Use existing notification helper if possible or send_mail directly
+    # Use standardized notification helper
     from sacc_app.notify import send_member_email
-    member_id = frappe.db.get_value("SACCO Member", {"email": email}, "name")
-    
-    if member_id:
-        send_member_email(member_id, subject, message)
-    else:
-        frappe.sendmail(
-            recipients=[email],
-            subject=subject,
-            message=message,
-            delayed=False
-        )
+    send_member_email(email, subject, message)
         
     return {"status": "success", "message": "OTP sent to your email"}
 
@@ -1856,7 +1951,7 @@ def get_loan_applications(status=None, member_name=None, member_id=None, loan_id
         SELECT 
             l.name as loan_id,
             l.member as member_id,
-            m.member_name,
+            COALESCE(m.member_name, l.member) as member_name,
             l.loan_amount as amount_applied,
             l.loan_amount as amount_disbursed,
             l.interest_rate,

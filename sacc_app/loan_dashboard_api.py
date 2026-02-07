@@ -125,7 +125,7 @@ def get_loan_applications(status=None, member_name=None, member_id=None, loan_id
         SELECT 
             l.name as loan_id,
             l.member as member_id,
-            m.member_name,
+            COALESCE(m.member_name, l.member) as member_name,
             l.loan_amount as amount_applied,
             l.loan_amount as amount_disbursed,
             l.interest_rate,

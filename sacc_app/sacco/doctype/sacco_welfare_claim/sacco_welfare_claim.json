@@ -1,0 +1,151 @@
+{
+    "actions": [],
+    "autoname": "CLAIM-.#####",
+    "creation": "2026-02-06 22:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "member",
+        "reason",
+        "claim_amount",
+        "description",
+        "column_break_1",
+        "claim_date",
+        "status",
+        "amount_per_member",
+        "total_collected",
+        "section_break_2",
+        "amount_paid",
+        "payment_date",
+        "payment_mode",
+        "journal_entry",
+        "amended_from"
+    ],
+    "fields": [
+        {
+            "fieldname": "member",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Member",
+            "options": "SACCO Member",
+            "reqd": 1
+        },
+        {
+            "fieldname": "reason",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Reason",
+            "options": "Medical Emergency\nFuneral/Demise\nEducation Support\nDisaster Relief\nOther",
+            "reqd": 1
+        },
+        {
+            "fieldname": "claim_amount",
+            "fieldtype": "Currency",
+            "in_list_view": 1,
+            "label": "Claim Amount",
+            "reqd": 1
+        },
+        {
+            "fieldname": "description",
+            "fieldtype": "Text",
+            "label": "Description"
+        },
+        {
+            "fieldname": "column_break_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "Today",
+            "fieldname": "claim_date",
+            "fieldtype": "Date",
+            "label": "Claim Date",
+            "reqd": 1
+        },
+        {
+            "default": "Pending",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Status",
+            "options": "Pending\nApproved\nRejected\nPartially Paid\nPaid",
+            "reqd": 1
+        },
+        {
+            "fieldname": "amount_per_member",
+            "fieldtype": "Currency",
+            "label": "Amount Per Member"
+        },
+        {
+            "fieldname": "total_collected",
+            "fieldtype": "Currency",
+            "label": "Total Collected",
+            "read_only": 1
+        },
+        {
+            "collapsible": 1,
+            "fieldname": "section_break_2",
+            "fieldtype": "Section Break",
+            "label": "Payment Details"
+        },
+        {
+            "fieldname": "amount_paid",
+            "fieldtype": "Currency",
+            "label": "Amount Paid",
+            "read_only": 1
+        },
+        {
+            "fieldname": "payment_date",
+            "fieldtype": "Date",
+            "label": "Payment Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "payment_mode",
+            "fieldtype": "Select",
+            "label": "Payment Mode",
+            "options": "Cash\nBank Transfer\nMobile Money\nCheque",
+            "read_only": 1
+        },
+        {
+            "fieldname": "journal_entry",
+            "fieldtype": "Link",
+            "label": "Journal Entry",
+            "options": "Journal Entry",
+            "read_only": 1
+        },
+        {
+            "fieldname": "amended_from",
+            "fieldtype": "Link",
+            "label": "Amended From",
+            "no_copy": 1,
+            "options": "SACCO Welfare Claim",
+            "read_only": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "is_submittable": 0,
+    "links": [],
+    "modified": "2026-02-06 22:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Sacco",
+    "name": "SACCO Welfare Claim",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

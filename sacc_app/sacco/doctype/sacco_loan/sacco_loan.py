@@ -215,13 +215,9 @@ class SACCOLoan(Document):
 			# Fetch Guarantor email/phone
 			guarantor_doc = frappe.get_doc("SACCO Member", g.guarantor_member)
 			
-			message = f"Dear {guarantor_doc.first_name}, the loan {self.name} you guaranteed for {self.member} has defaulted. Please be advised that you are liable for {g.guarantee_amount}."
-			
-			# Log Notification (Simulating Email/SMS)
-			frappe.log_error(message, f"Guarantor Notification: {guarantor_doc.email}")
-			
-			# In a real system:
-			# frappe.sendmail(recipients=[guarantor_doc.email], subject="Loan Default Notice", message=message)
+			# Send notification
+			from sacc_app.notify import send_member_email
+			send_member_email(guarantor_doc.name, "Loan Default Notice", message)
 			
 	def update_demanded_amounts(self):
 		"""

@@ -14,6 +14,8 @@ def get_member_stats():
     first_day = get_first_day(today)
     new_members = frappe.db.count("SACCO Member", filters={"creation": [">=", first_day]})
     
+    other_members = total_members - active_members
+    
     # Aggregated Financials
     total_savings = frappe.db.get_value("SACCO Member", {}, "sum(total_savings)") or 0
     total_loans = frappe.db.get_value("SACCO Member", {}, "sum(total_loan_outstanding)") or 0
@@ -223,28 +225,62 @@ def get_member_full_details(member_id):
     
     # 1. Registration details including images
     member_data = doc.as_dict()
-    # Filter out sensitive or irrelevant fields if necessary
     
     # 2. Aggregated Welfare Contributions
     welfare_total = frappe.db.get_value("SACCO Welfare", 
         {"member": member_id, "type": "Contribution", "docstatus": 1}, 
         "sum(contribution_amount)") or 0
         
-    # 3. Active Loan Balances
-    active_loans = frappe.db.get_all("SACCO Loan", 
-        filters={"member": member_id, "status": ["in", ["Active", "Disbursed", "Defaulted"]]},
-        fields=["name", "loan_amount", "outstanding_balance", "status"]
+    # 3. Comprehensive Loan History (All statuses)
+    all_loans = frappe.db.get_all("SACCO Loan", 
+        filters={"member": member_id},
+        fields=[
+            "name", "loan_product", "loan_amount", "interest_rate", 
+            "outstanding_balance", "status", "creation", "total_repayable",
+            "principal_paid", "interest_paid"
+        ],
+        order_by="creation desc"
     )
+    
+    # 4. Detailed Account Information with real-time balances
+    # We fetch balances directly from GL to ensure accuracy
+    company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
+    
+    accounts = []
+    if doc.savings_account:
+        savings_balance = frappe.db.get_value("GL Entry", 
+            {"account": doc.savings_account, "company": company, "docstatus": 1}, 
+            "sum(credit - debit)") or 0
+            
+        accounts.append({
+            "account_id": doc.savings_account,
+            "label": "Savings Account",
+            "balance": flt(savings_balance),
+            "type": "Liability"
+        })
+        
+    if doc.ledger_account:
+        loan_balance = frappe.db.get_value("GL Entry", 
+            {"account": doc.ledger_account, "company": company, "docstatus": 1}, 
+            "sum(debit - credit)") or 0
+            
+        accounts.append({
+            "account_id": doc.ledger_account,
+            "label": "Loan Ledger Account",
+            "balance": flt(loan_balance),
+            "type": "Asset"
+        })
     
     return {
         "status": "success",
         "data": {
             "registration_details": member_data,
+            "accounts": accounts,
+            "loans": all_loans,
             "financial_summary": {
                 "total_savings": flt(doc.total_savings),
                 "total_loan_outstanding": flt(doc.total_loan_outstanding),
-                "total_welfare_contribution": flt(welfare_total),
-                "active_loans": active_loans
+                "total_welfare_contribution": flt(welfare_total)
             }
         }
     }
